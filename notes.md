@@ -18,16 +18,15 @@ Examples:
 
 When printed, a Go board is not meant to be square. When seated in front of a square board, it would look wider than tall. Therefore, for reasons of perspective, they are longer in the direction from one player to the other than from left to right. The grid sizes are derived from the stone size in the settings.
 
-
 # Accessibility and contrast
 Since this image is for individual use and is highly customizable, prefer aesthetics over the color blindness concerns when choosing palette.
 
 # Generation options
-1. Board size. The defaults are 9x9, 13x13, 19x19. The 19x19 is default. This option is only available if grid is included. This is the dimensions of the grid, not the pixel size of the board on the image.
+1. Board size. The defaults are 9x9, 13x13, 19x19. The 19x19 is default. This option is required for both print and OGS output. This is the dimensions of the grid, not the pixel size of the board on the image.
 2. Theme. It is configured by:
     - Reference style image
     - Prompt. The prompt may include theme description, if the user has color blindness, palette colors.
-3. Include grid into board image. Some people might prefer the default OGS grid instead. Enabled by default.
+3. Include grid into board image. Enabled by default. This option can only be disabled if output is online, because OGS can overlay its own grid. For print output, the grid is always included.
 4. Extend background to the whole image or draw board edges. If edges are included, ask for a prompt or image for them. By default, extend background to the whole image.
 4. Include the coordinates. This option is only available if grid is included
 5. Output format. There are two options: print and OGS.
@@ -42,7 +41,7 @@ This needs research. Requirements:
 - Must take both images and prompts as inputs
 - We should be able to express the palette to it
 
-How do we manage the API keys? This needs research. The simplest idea is to ask user for an API key and use it without storing.
+How do we manage the API keys? This needs research. The simplest idea is to ask user for an API key and use it in memory without storing. This adds friction - a user must provide the API key every time, avoids security issues around the persistence.
 
 ## Output
 
@@ -58,8 +57,30 @@ The grid and board labels (coordinates) must be positioned precisely to match wh
 For printing it is important to preserve the exact sizes. If scaling causes the grid to be slightly smaller, the stones may not fit.
 
 There are two approaches to create a PDF:
-- Create a page ready for printing, and let the user print it to PDF. This is more prone to scaling issues - the defaults for margins and scale may mismatch.
-- Create PDF directly in app. This may have scaling issues if the paper size in PDF doesn't match the actual paper in the printer.
+- Create a page ready for printing, and let the user print it to PDF.
+  This is simpler to implement, but it is more prone to scaling issues because browser and printer defaults for margins and Fit/Shrink may mismatch.
+- Create PDF directly in app.
+  This gives more control over physical dimensions and output consistency, but it still depends on matching the paper size in PDF and printer settings.
+
+MVP choice: create PDF directly in app.
+
+Reasoning for this choice:
+- Precise physical dimensions are a core requirement, and direct PDF generation gives more deterministic control over millimeter-based layout.
+- It reduces browser-specific print rendering differences compared to HTML print pages.
+- We can define safe default margins and give clear print instructions (Actual size 100%, disable Fit/Shrink).
+- It aligns better with future calibration support.
+
+MVP details:
+- Generate PDF directly in app as vector output with dimensions defined in millimeters.
+- Let the user choose paper size (start with A4 and Letter).
+- Do not expose orientation settings in MVP.
+- Use safe margins by default to avoid printer-specific non-printable areas.
+- Show print instructions: print at Actual size (100%), disable Fit/Shrink.
+
+Post-MVP calibration workflow:
+- Add an optional calibration object on the same page as the board (for example, a ruler or 100 mm reference line).
+- User prints once, measures the calibration object, and enters measured size.
+- App calculates a correction factor and regenerates the PDF with corrected physical dimensions.
 
 
 ### Colors
@@ -84,6 +105,7 @@ Avoid over-engineering. But make the technical decisions that don't block these 
 2. List of theme suggestions. Those are sources for the prompts.
 3. Add palette settings
 4. Generate palette colors for board (background) and stones (two foreground)
+5. Add print calibration workflow with a calibration object on the same page as the board
 
 ## Open questions
 - How to pass palette and theme images to generator?
