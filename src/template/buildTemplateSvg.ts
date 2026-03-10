@@ -30,6 +30,42 @@ function escapeXml(value: string): string {
   });
 }
 
+function toJapaneseNumeral(value: number): string {
+  const digits = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  const digit = (index: number) => digits[index] ?? "";
+  if (value <= 0) return "零";
+  if (value < 10) return digit(value);
+  if (value === 10) return "十";
+  if (value < 20) return `十${digit(value - 10)}`;
+  const tens = Math.floor(value / 10);
+  const units = value % 10;
+  return `${digit(tens)}十${digit(units)}`;
+}
+
+function getCoordinateSides(display: GenerationOptions["coordinateDisplay"]): {
+  top: boolean;
+  bottom: boolean;
+  left: boolean;
+  right: boolean;
+} {
+  if (display === "all") {
+    return { top: true, bottom: true, left: true, right: true };
+  }
+  if (display === "top_left") {
+    return { top: true, bottom: false, left: true, right: false };
+  }
+  if (display === "top_right") {
+    return { top: true, bottom: false, left: false, right: true };
+  }
+  if (display === "bottom_left") {
+    return { top: false, bottom: true, left: true, right: false };
+  }
+  if (display === "bottom_right") {
+    return { top: false, bottom: true, left: false, right: true };
+  }
+  return { top: false, bottom: false, left: false, right: false };
+}
+
 export function buildTemplateSvg(options: GenerationOptions): string {
   // The spacing, thickness, and size of star points are typical, see equipment dimensions.
   const metrics = buildLayoutMetrics(options);
@@ -40,6 +76,7 @@ export function buildTemplateSvg(options: GenerationOptions): string {
   const spacingX = (metrics.gridRightPx - metrics.gridLeftPx) / (metrics.lineCount - 1);
   const spacingY = (metrics.gridBottomPx - metrics.gridTopPx) / (metrics.lineCount - 1);
   const coordinateFont = Math.max(14, Math.min(spacingX, spacingY) * 0.28);
+  const coordinateSides = getCoordinateSides(options.coordinateDisplay);
   const lines: string[] = [];
   const labels: string[] = [];
   const starPoints: string[] = [];
@@ -53,15 +90,25 @@ export function buildTemplateSvg(options: GenerationOptions): string {
         svgLine(metrics.gridLeftPx, y, metrics.gridRightPx, y, lineStroke, 1.6)
       );
 
-      if (options.includeCoordinates) {
-        const letter = escapeXml(getCoordinateLetter(i));
-        const number = String(metrics.lineCount - i);
-        labels.push(
-          svgText(letter, x, metrics.gridTopPx - spacingY * 0.45, coordinateFont),
-          svgText(letter, x, metrics.gridBottomPx + spacingY * 0.45, coordinateFont),
-          svgText(number, metrics.gridLeftPx - spacingX * 0.45, y, coordinateFont),
-          svgText(number, metrics.gridRightPx + spacingX * 0.45, y, coordinateFont)
-        );
+      if (options.coordinateDisplay !== "none") {
+        const xLabel =
+          options.coordinateLettering === "a1" ? escapeXml(getCoordinateLetter(i)) : String(i + 1);
+        const yValue = options.coordinateLettering === "a1" ? metrics.lineCount - i : i + 1;
+        const yLabel =
+          options.coordinateLettering === "a1" ? String(yValue) : escapeXml(toJapaneseNumeral(yValue));
+
+        if (coordinateSides.top) {
+          labels.push(svgText(xLabel, x, metrics.gridTopPx - spacingY * 0.45, coordinateFont));
+        }
+        if (coordinateSides.bottom) {
+          labels.push(svgText(xLabel, x, metrics.gridBottomPx + spacingY * 0.45, coordinateFont));
+        }
+        if (coordinateSides.left) {
+          labels.push(svgText(yLabel, metrics.gridLeftPx - spacingX * 0.45, y, coordinateFont));
+        }
+        if (coordinateSides.right) {
+          labels.push(svgText(yLabel, metrics.gridRightPx + spacingX * 0.45, y, coordinateFont));
+        }
       }
     }
 

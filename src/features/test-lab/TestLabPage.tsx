@@ -135,6 +135,13 @@ export function TestLabPage() {
 
       <div className="layout">
         <div className="stack">
+          <RunPanel
+            canRun={!isRunning}
+            isRunning={isRunning}
+            error={error}
+            onGenerateTemplate={handleGenerateTemplate}
+            onRunModel={handleRunModel}
+          />
           <OptionsPanel
             value={options}
             onChange={(next) => {
@@ -152,13 +159,6 @@ export function TestLabPage() {
             onApiKeyChange={setApiKey}
             onPromptChange={setPrompt}
             onStyleFileChange={setStyleFile}
-          />
-          <RunPanel
-            canRun={!isRunning}
-            isRunning={isRunning}
-            error={error}
-            onGenerateTemplate={handleGenerateTemplate}
-            onRunModel={handleRunModel}
           />
           <ArtifactPanel
             providerId={providerId}

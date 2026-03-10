@@ -1,5 +1,9 @@
-import type { GenerationOptions } from "../../domain/options";
-import type { ImageEdgeMarginMode } from "../../domain/options";
+import type {
+  CoordinateDisplay,
+  CoordinateLettering,
+  GenerationOptions,
+  ImageEdgeMarginMode
+} from "../../domain/options";
 
 interface Props {
   value: GenerationOptions;
@@ -12,6 +16,7 @@ function asBool(value: string): boolean {
 
 export function OptionsPanel({ value, onChange }: Props) {
   const canDisableGrid = value.outputFormat === "online";
+  const coordinatesEnabled = value.coordinateDisplay !== "none";
 
   const setMarginMode = (mode: ImageEdgeMarginMode) => onChange({ ...value, imageEdgeMarginMode: mode });
 
@@ -59,19 +64,35 @@ export function OptionsPanel({ value, onChange }: Props) {
         </div>
 
         <div className="field">
-          <label>Include coordinates</label>
+          <label>Coordinates display</label>
           <select
-            value={String(value.includeCoordinates)}
+            value={value.coordinateDisplay}
             disabled={!value.includeGrid}
-            onChange={(e) => onChange({ ...value, includeCoordinates: asBool(e.target.value) })}
+            onChange={(e) => onChange({ ...value, coordinateDisplay: e.target.value as CoordinateDisplay })}
           >
-            <option value="false">No</option>
-            <option value="true">Yes</option>
+            <option value="none">None</option>
+            <option value="all">All</option>
+            <option value="top_left">Top left</option>
+            <option value="top_right">Top right</option>
+            <option value="bottom_left">Bottom left</option>
+            <option value="bottom_right">Bottom right</option>
           </select>
         </div>
       </div>
 
       <div className="grid-2">
+        <div className="field">
+          <label>Coordinate lettering</label>
+          <select
+            value={value.coordinateLettering}
+            disabled={!value.includeGrid || !coordinatesEnabled}
+            onChange={(e) => onChange({ ...value, coordinateLettering: e.target.value as CoordinateLettering })}
+          >
+            <option value="a1">A1</option>
+            <option value="numeric_japanese">1-1</option>
+          </select>
+        </div>
+
         <div className="field">
           <label>Draw board edges</label>
           <select value={String(value.drawBoardEdges)} onChange={(e) => onChange({ ...value, drawBoardEdges: asBool(e.target.value) })}>
