@@ -17,6 +17,8 @@ When printed, a Go board is not meant to be square. When seated in front of a sq
 
 Since this image is for individual use and is highly customizable, prefer aesthetics over the color blindness concerns when choosing palette.
 
+The boundary between the board image margin and the board edge. It depends on the theme for the board and the image edges margin. For example, if the theme is natural (lawn), the boundary should look natural too. For examply mildly, not a sharp edge. Or if the theme involves straight lines (such as bricks), the boundary can have the sharp edge.
+
 
 ### Colors
 The palette and contrast should be treated based on the human visual perception rather than mathematical relationships between the colors. The OKLCH is a good fit. The exploration of the online tools to generate distinct colors, shows that they aren't a good fit: they work for more than 3 colors, without distinghishing the role of the color. Instead, we can work with the OKLCH algorithms directly, so that we can set the target ranges of lightness for board and stones. Likely, the board would set the baseline for the lightness, and the black and white stones would have +-delta lightness compared to it.

@@ -1,24 +1,25 @@
 # Overview
-Description of the product
-
-
-# Generation options
-1. Board size. The defaults are 9x9, 13x13, 19x19. The 19x19 is default. This option is required for both print and OGS output. This is the dimensions of the grid, not the pixel size of the board on the image.
-2. Theme. It is configured by:
-    - Reference style image
-    - Prompt. The prompt may include theme description, if the user has color blindness, palette colors.
-3. Include grid into board image. Enabled by default. This option can only be disabled if output is online, because OGS can overlay its own grid. For print output, the grid is always included.
-4. Extend background to the whole image or draw board edges. If edges are included, ask for a prompt or image for them. By default, extend background to the whole image.
-4. Include the coordinates. This option is only available if grid is included
-5. Output format. There are two options: print and OGS.
-6. Size of stones in mm. This option is only available if output is for print. Include default options.
+Generate assets for board image and stones. The output is customizable with [rich options](options.md), and can be fit for printing or OGS.
 
 # Roadmap
-1. MVP. The tool generates a board with an optional grid and stones
+1. MVP. The tool generates a board with grid and stones. Supports options for board size, theme and including the grid.
 2. List of theme suggestions. Those are sources for the prompts.
 3. Add palette settings
 4. Generate palette colors for board (background) and stones (two foreground)
 5. Add print calibration workflow with a calibration object on the same page as the board
+
+# Terms
+- Go board. Also called goban, is the board used for playing go.
+- OGS. Online go server at https://online-go.com. It has customization settings where you can set links to the images for board and stones.
+- Stone. A round token that you place on the board when playing go. In the theme it doesn't have to look like an actual stone. The black and white stones may not mean the actual color of the themed stone.
+- Template image. One of the inputs to the AI image generator. It is created by the tool internally. It carries the details that must be positioned precisely
+- Reference style image. One of the inputs to the AI image generator, provided by the user.
+- Output board image. The AI-generated image of the go board.
+- Grid. The lines on the board form a grid. The stones get placed on the grid intersections, including the ones on the grid outer sides and the corners. At the certain coordinates there are small circles called star points that serve as a visual reference.
+- Board edges. That's where the board ends.
+- Board edge margin. The space between the board edges and the outermost lines of the grid. It must be least half a stone size. If the margin is too small, the stone would not fit on the board. The margin between grid and board edge may be larger and not symmetrical if they show coordinates.
+- Output board image edges. The actual edges of the output image.
+- Output board image edges margin. The space between the board edges and the output board image edges.
 
 ## Open questions
 - How to pass palette and theme images to generator?
@@ -35,14 +36,13 @@ Description of the product
 
 - How to describe a theme?
 
-  The prompt tells: what is the theme overall, visual style, what represents a board, what represents the stones. Example: a lawn in a cartoon style, the board is the lawn, the black stones are purple malvas, the white stones are white lillies. Only draw the flowers, and skip the stems
+  The prompt tells: what is the theme overall, visual style, what represents a board, what represents the stones. Example: a lawn in a cartoon style, the board is the lawn, the black stones are purple malvas, the white stones are white lillies. Only draw the flowers, and skip the stems.
 
-# Terms
-- OGS. Online go server at https://online-go.com. It has customization settings where you can set links to the images for board and stones.
-- Stone. A round token that you place on the board when playing go. In the theme it doesn't have to look like an actual stone. The black and white stones may not mean the actual color of the themed stone.
-- Template image. One of the inputs to the AI image generator. It is created by the tool internally. It carries the details that must be positioned precisely
-- Reference style image. One of the inputs to the AI image generator, provided by the user.
+- How to tell the AI generation model which areas of the template image correspond to the theme?
+
+  The model needs to preserve the geometric elements and apply the theme to certain areas. Should we include captions that correspond to the prompt into the image, describe the image parts in the prompt, or do anything else? Some parts are very thin and cannot contain text, such as board edges.
 
 # References
 - https://irrationaltools.com/color-palette-generator - OKLCH, generate palette
 - https://senseis.xmp.net/?EquipmentDimensions - Dimensions for Chinese and Japanese boards. The Chinese stones are slightly larger. The stone size may be 21.5-24mm.
+- https://mufeedvh.com/posts/i-made-a-programming-language-with-mnms/ - includes image generation for colored round item and centering it in a sprite

@@ -8,16 +8,35 @@ The API keys for AI are provided by the user.
 
 # Technical decisions and constraints
 
+Implementation details for the MVP web app are documented in [web app MVP design](web-app-mvp.md).
+
 ## AI image generator
-This needs research. Requirements:
-- Must be able to generate images with transparent parts
-- Must take both images and prompts as inputs
-- We should be able to express the palette to it
+See [image generator doc](image-generator.md)
 
 How do we manage the API keys? This needs research. The simplest idea is to ask user for an API key and use it in memory without storing. This adds friction - a user must provide the API key every time, avoids security issues around the persistence.
 
-## Controlling grid and labels
-The template image is created as SVG, and rasterized to pass as an input to the AI model.
+## Controlling the layout and colors
+The grid and board labels (coordinates) must be positioned precisely to match where OGS places the stones. For print the grid also must be present. Passing the exact geometry in the prompt as text is unfeasible. Instead, the solution is to create a template image that holds the geometry. 
+
+The exact content of that image depends on what works best for a particular model.  Thickness of the lines, presence of any auxiliary elements may vary.
+
+Depending on the options, the template image may contain:
+- the board grid to control the position
+- the outer edge of the board to control the position
+- suggested colors for the areas
+
+The template image is created as SVG, and rasterized to pass as an input to the AI model. This also allows customizing the font.
+
+What the template image contents depend on the board edges and image edges margin settings:
+This isn't an exhaustive list
+
+Draw board edges | Output board image edges margin | Grid settings | Template image
+no | transparent | grid&labels | Rectangle representing the board, its dimensions match the board edge, inside are labels and grid. Everything is colored according to the palette. Outside of the rectangle the output board image edges margin is transparent
+no | extend board theme | grid | the same as above but instead of the rectangle having the background, the whole image has it. The board edge margin is solid color and has no labels
+no | prompt or image (water) | grid&labels | the output board image edges margin indicates that it is associated with the theme. Figure out how.
+yes (fence) | transparent | no grid&labels | Rectangle representing the board, its dimensions match the board edge. The stroke for rectangle has a distinct color compared to its fill, and represents the board edge. Everything is colored according to the palette. Outside of the rectangle the output board image edges margin is transparent
+no | extend board theme | no grid&labels | There are no distinct geometric features to display. The image is filled with solid palette color.
+...
 
 ## Output
 
@@ -26,8 +45,6 @@ Zip archive with images for OGS. Includes: board.png, black-stone.png, white-sto
 The black and white stones are stored in separate images. The image must be square, 100x100px or higher, with transparency around the stone.
 
 The board format is a png image. It must be square, 1024x1024px or higher.
-
-The grid and board labels (coordinates) must be positioned precisely to match where OGS places the stones. The solution is to create a template image with grid and labels, and pass it as an input to the AI image generator. This also allows customizing the font. Even if the grid and labels are disabled, the image would contain the border of the board. The template image is not necessary if the image generator has no concrete guides: grid, coordinates, and board edge aren't drawn, and there is no palette.
 
 ### Printing
 For printing it is important to preserve the exact sizes. If scaling causes the grid to be slightly smaller, the stones may not fit.
