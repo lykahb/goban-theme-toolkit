@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { GenerationOptions } from "../../domain/options";
 import { downloadBlob, downloadJson } from "../../lib/download";
 import type { ProviderId } from "../../providers/types";
@@ -13,6 +14,19 @@ interface Props {
 }
 
 export function ArtifactPanel({ templateSvg, templatePng, generatedImage, providerId, model, prompt, options }: Props) {
+  const [copyStatus, setCopyStatus] = useState<string | undefined>(undefined);
+
+  const copyTemplateDataUrl = async () => {
+    if (!templateSvg) return;
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(templateSvg)}`;
+    try {
+      await navigator.clipboard.writeText(dataUrl);
+      setCopyStatus("Template SVG data URL copied to clipboard.");
+    } catch (_error) {
+      setCopyStatus("Copy failed. Your browser might block clipboard access.");
+    }
+  };
+
   return (
     <section className="card">
       <h2>Artifacts</h2>
@@ -26,6 +40,9 @@ export function ArtifactPanel({ templateSvg, templatePng, generatedImage, provid
           }}
         >
           Download template.svg
+        </button>
+        <button type="button" disabled={!templateSvg} onClick={() => void copyTemplateDataUrl()}>
+          Copy template.svg data URL
         </button>
         <button
           type="button"
@@ -64,6 +81,7 @@ export function ArtifactPanel({ templateSvg, templatePng, generatedImage, provid
         >
           Download run-metadata.json
         </button>
+        {copyStatus ? <p className="muted">{copyStatus}</p> : null}
       </div>
     </section>
   );
