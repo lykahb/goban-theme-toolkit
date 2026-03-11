@@ -218,12 +218,14 @@ Initialize:
 ### Board bounds
 
 Initialize board rectangle from grid bounds plus board-edge margins:
-- `boardEdgeMarginXPx`
-- `boardEdgeMarginYPx`
-- `boardLeftPx = gridLeftPx - boardEdgeMarginXPx`
-- `boardTopPx = gridTopPx - boardEdgeMarginYPx`
-- `boardRightPx = gridRightPx + boardEdgeMarginXPx`
-- `boardBottomPx = gridBottomPx + boardEdgeMarginYPx`
+- `boardEdgeMarginTopPx`
+- `boardEdgeMarginBottomPx`
+- `boardEdgeMarginLeftPx`
+- `boardEdgeMarginRightPx`
+- `boardLeftPx = gridLeftPx - boardEdgeMarginLeftPx`
+- `boardTopPx = gridTopPx - boardEdgeMarginTopPx`
+- `boardRightPx = gridRightPx + boardEdgeMarginRightPx`
+- `boardBottomPx = gridBottomPx + boardEdgeMarginBottomPx`
 - `boardWidthPx = boardRightPx - boardLeftPx`
 - `boardHeightPx = boardBottomPx - boardTopPx`
 

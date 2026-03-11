@@ -16,8 +16,10 @@ export interface LayoutMetrics {
   gridTopPx: number;
   gridRightPx: number;
   gridBottomPx: number;
-  boardEdgeMarginXPx: number;
-  boardEdgeMarginYPx: number;
+  boardEdgeMarginTopPx: number;
+  boardEdgeMarginBottomPx: number;
+  boardEdgeMarginLeftPx: number;
+  boardEdgeMarginRightPx: number;
   lineCount: number;
 }
 
@@ -70,15 +72,16 @@ export function buildLayoutMetrics(options: GenerationOptions): LayoutMetrics {
   const boardRightPx = boardLeftPx + boardWidthPx;
   const boardBottomPx = boardTopPx + boardHeightPx;
 
-  // Match OGS intersection placement: first intersection is half a square from board edge.
-  const boardEdgeMarginXPx = squareSizePx / 2;
-  const boardEdgeMarginYPx = squareSizePx / 2;
-  const gridWidthPx = (lineCount - 1) * squareSizePx;
-  const gridHeightPx = (lineCount - 1) * squareSizePx;
-  const gridLeftPx = boardLeftPx + boardEdgeMarginXPx;
-  const gridTopPx = boardTopPx + boardEdgeMarginYPx;
-  const gridRightPx = gridLeftPx + gridWidthPx;
-  const gridBottomPx = gridTopPx + gridHeightPx;
+  // Match OGS intersection placement: first/last intersections are half a square from board edge.
+  // Keep these symmetric for now; side-specific fields support non-symmetric margins later.
+  const boardEdgeMarginTopPx = squareSizePx / 2;
+  const boardEdgeMarginBottomPx = squareSizePx / 2;
+  const boardEdgeMarginLeftPx = squareSizePx / 2;
+  const boardEdgeMarginRightPx = squareSizePx / 2;
+  const gridLeftPx = boardLeftPx + boardEdgeMarginLeftPx;
+  const gridTopPx = boardTopPx + boardEdgeMarginTopPx;
+  const gridRightPx = boardRightPx - boardEdgeMarginRightPx;
+  const gridBottomPx = boardBottomPx - boardEdgeMarginBottomPx;
 
   return {
     squareSizePx,
@@ -94,22 +97,12 @@ export function buildLayoutMetrics(options: GenerationOptions): LayoutMetrics {
     gridTopPx,
     gridRightPx,
     gridBottomPx,
-    boardEdgeMarginXPx,
-    boardEdgeMarginYPx,
+    boardEdgeMarginTopPx,
+    boardEdgeMarginBottomPx,
+    boardEdgeMarginLeftPx,
+    boardEdgeMarginRightPx,
     lineCount,
   };
-}
-
-export function getCoordinateLabel(index: number, size: number): string {
-  const letters = "ABCDEFGHJKLMNOPQRST";
-  const letter = letters[index] ?? "?";
-  const number = size - index;
-  return `${letter}${number}`;
-}
-
-export function getCoordinateLetter(index: number): string {
-  const letters = "ABCDEFGHJKLMNOPQRST";
-  return letters[index] ?? "?";
 }
 
 export function getStarPoints(lineCount: number): Array<[number, number]> {

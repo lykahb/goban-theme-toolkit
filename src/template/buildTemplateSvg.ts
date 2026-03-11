@@ -1,6 +1,5 @@
 import {
   buildLayoutMetrics,
-  getCoordinateLetter,
   getCoordinateSides,
   getStarPoints
 } from "../domain/layout";
@@ -11,7 +10,7 @@ function svgLine(x1: number, y1: number, x2: number, y2: number, stroke: string,
 }
 
 function svgText(text: string, x: number, y: number, fontSize: number) {
-  return `<text x="${x}" y="${y}" font-family="Noto Sans, Arial, sans-serif" font-size="${fontSize}" fill="#2f2a23" text-anchor="middle" dominant-baseline="middle">${text}</text>`;
+  return `<text x="${x}" y="${y}" font-family="Noto Sans, Arial, sans-serif" font-weight="bold" font-size="${fontSize}" fill="#2f2a23" text-anchor="middle" dominant-baseline="middle">${text}</text>`;
 }
 
 function svgCircle(cx: number, cy: number, radius: number, fill: string) {
@@ -36,15 +35,22 @@ function escapeXml(value: string): string {
 }
 
 function toJapaneseNumeral(value: number): string {
+  if (!Number.isInteger(value) || value < 1 || value > 99) {
+    throw new Error(`toJapaneseNumeral expected an integer in range 1-99, got: ${value}`);
+  }
   const digits = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
   const digit = (index: number) => digits[index] ?? "";
-  if (value <= 0) return "零";
   if (value < 10) return digit(value);
   if (value === 10) return "十";
   if (value < 20) return `十${digit(value - 10)}`;
   const tens = Math.floor(value / 10);
   const units = value % 10;
   return `${digit(tens)}十${digit(units)}`;
+}
+
+function getCoordinateLetter(index: number): string {
+  const letters = "ABCDEFGHJKLMNOPQRST";
+  return letters[index] ?? "?";
 }
 
 export function buildTemplateSvg(options: GenerationOptions): string {
@@ -56,7 +62,7 @@ export function buildTemplateSvg(options: GenerationOptions): string {
   const lineStroke = "#2c241a";
   const spacingX = (metrics.gridRightPx - metrics.gridLeftPx) / (metrics.lineCount - 1);
   const spacingY = (metrics.gridBottomPx - metrics.gridTopPx) / (metrics.lineCount - 1);
-  const coordinateFont = Math.max(14, Math.min(spacingX, spacingY) * 0.28);
+  const coordinateFont = Math.max(14, Math.min(spacingX, spacingY) * 0.4);
   const coordinateSides = getCoordinateSides(options.coordinateDisplay);
   const lines: string[] = [];
   const labels: string[] = [];
