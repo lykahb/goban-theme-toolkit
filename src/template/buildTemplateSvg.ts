@@ -99,7 +99,7 @@ export function buildTemplateSvg(options: GenerationOptions): string {
       }
     }
 
-    const starRadius = Math.max(5, Math.min(spacingX, spacingY) * 0.16);
+    const starRadius = Math.max(5, Math.min(spacingX, spacingY) * 0.1);
     for (const [x, y] of getStarPoints(metrics.lineCount)) {
       const cx = metrics.gridLeftPx + (x - 1) * spacingX;
       const cy = metrics.gridTopPx + (y - 1) * spacingY;
