@@ -1,7 +1,9 @@
 import type { GenerationOptions } from "./options";
+import type { CoordinateDisplay } from "./options";
 
 export interface LayoutMetrics {
   // All metrics are in template image pixels.
+  squareSizePx: number;
   imageWidthPx: number;
   imageHeightPx: number;
   boardWidthPx: number;
@@ -21,32 +23,65 @@ export interface LayoutMetrics {
 
 export const TEMPLATE_IMAGE_SIZE = 1024;
 
+export interface CoordinateSides {
+  top: boolean;
+  bottom: boolean;
+  left: boolean;
+  right: boolean;
+}
+
+export function getCoordinateSides(display: CoordinateDisplay): CoordinateSides {
+  if (display === "all") {
+    return { top: true, bottom: true, left: true, right: true };
+  }
+  if (display === "top_left") {
+    return { top: true, bottom: false, left: true, right: false };
+  }
+  if (display === "top_right") {
+    return { top: true, bottom: false, left: false, right: true };
+  }
+  if (display === "bottom_left") {
+    return { top: false, bottom: true, left: true, right: false };
+  }
+  if (display === "bottom_right") {
+    return { top: false, bottom: true, left: false, right: true };
+  }
+  return { top: false, bottom: false, left: false, right: false };
+}
+
 export function buildLayoutMetrics(options: GenerationOptions): LayoutMetrics {
-  const imageWidthPx = TEMPLATE_IMAGE_SIZE;
-  const imageHeightPx = TEMPLATE_IMAGE_SIZE;
-  const imageEdgeMargin = 36;
+  const lineCount = options.boardSize;
+  const sides = getCoordinateSides(options.coordinateDisplay);
+
+  const boundedGridWidth = lineCount;
+  const boundedGridHeight = lineCount;
+  const squaresWide = boundedGridWidth + Number(sides.left) + Number(sides.right);
+  const squaresHigh = boundedGridHeight + Number(sides.top) + Number(sides.bottom);
+  const squareSizePx = Math.max(1, Math.floor(TEMPLATE_IMAGE_SIZE / Math.max(squaresWide, squaresHigh)));
+  const imageWidthPx = squareSizePx * squaresWide;
+  const imageHeightPx = squareSizePx * squaresHigh;
 
   // A real printed goban may be rectangular (see docs/style.md).
   // For now we still initialize square board dimensions; options can extend this later.
-  const boardWidthPx = imageWidthPx - imageEdgeMargin * 2;
-  const boardHeightPx = boardWidthPx;
-  const boardLeftPx = imageEdgeMargin;
-  const boardTopPx = (imageHeightPx - boardHeightPx) / 2;
+  const boardWidthPx = lineCount * squareSizePx;
+  const boardHeightPx = lineCount * squareSizePx;
+  const boardLeftPx = sides.left ? squareSizePx : 0;
+  const boardTopPx = sides.top ? squareSizePx : 0;
   const boardRightPx = boardLeftPx + boardWidthPx;
   const boardBottomPx = boardTopPx + boardHeightPx;
 
-  // Keep board-edge margin at least half a stone by design.
-  const lineCount = options.boardSize;
-  const boardEdgeMarginXPx = boardWidthPx * 0.06;
-  const boardEdgeMarginYPx = boardHeightPx * 0.06;
-  const gridWidthPx = boardWidthPx - boardEdgeMarginXPx * 2;
-  const gridHeightPx = boardHeightPx - boardEdgeMarginYPx * 2;
+  // Match OGS intersection placement: first intersection is half a square from board edge.
+  const boardEdgeMarginXPx = squareSizePx / 2;
+  const boardEdgeMarginYPx = squareSizePx / 2;
+  const gridWidthPx = (lineCount - 1) * squareSizePx;
+  const gridHeightPx = (lineCount - 1) * squareSizePx;
   const gridLeftPx = boardLeftPx + boardEdgeMarginXPx;
   const gridTopPx = boardTopPx + boardEdgeMarginYPx;
   const gridRightPx = gridLeftPx + gridWidthPx;
   const gridBottomPx = gridTopPx + gridHeightPx;
 
   return {
+    squareSizePx,
     imageWidthPx,
     imageHeightPx,
     boardWidthPx,

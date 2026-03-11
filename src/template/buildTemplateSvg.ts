@@ -1,4 +1,9 @@
-import { buildLayoutMetrics, getCoordinateLetter, getStarPoints } from "../domain/layout";
+import {
+  buildLayoutMetrics,
+  getCoordinateLetter,
+  getCoordinateSides,
+  getStarPoints
+} from "../domain/layout";
 import type { GenerationOptions } from "../domain/options";
 
 function svgLine(x1: number, y1: number, x2: number, y2: number, stroke: string, width: number) {
@@ -42,30 +47,6 @@ function toJapaneseNumeral(value: number): string {
   return `${digit(tens)}十${digit(units)}`;
 }
 
-function getCoordinateSides(display: GenerationOptions["coordinateDisplay"]): {
-  top: boolean;
-  bottom: boolean;
-  left: boolean;
-  right: boolean;
-} {
-  if (display === "all") {
-    return { top: true, bottom: true, left: true, right: true };
-  }
-  if (display === "top_left") {
-    return { top: true, bottom: false, left: true, right: false };
-  }
-  if (display === "top_right") {
-    return { top: true, bottom: false, left: false, right: true };
-  }
-  if (display === "bottom_left") {
-    return { top: false, bottom: true, left: true, right: false };
-  }
-  if (display === "bottom_right") {
-    return { top: false, bottom: true, left: false, right: true };
-  }
-  return { top: false, bottom: false, left: false, right: false };
-}
-
 export function buildTemplateSvg(options: GenerationOptions): string {
   // The spacing, thickness, and size of star points are typical, see equipment dimensions.
   const metrics = buildLayoutMetrics(options);
@@ -98,16 +79,16 @@ export function buildTemplateSvg(options: GenerationOptions): string {
           options.coordinateLettering === "a1" ? String(yValue) : escapeXml(toJapaneseNumeral(yValue));
 
         if (coordinateSides.top) {
-          labels.push(svgText(xLabel, x, metrics.gridTopPx - spacingY * 0.45, coordinateFont));
+          labels.push(svgText(xLabel, x, metrics.gridTopPx - metrics.squareSizePx, coordinateFont));
         }
         if (coordinateSides.bottom) {
-          labels.push(svgText(xLabel, x, metrics.gridBottomPx + spacingY * 0.45, coordinateFont));
+          labels.push(svgText(xLabel, x, metrics.gridBottomPx + metrics.squareSizePx, coordinateFont));
         }
         if (coordinateSides.left) {
-          labels.push(svgText(yLabel, metrics.gridLeftPx - spacingX * 0.45, y, coordinateFont));
+          labels.push(svgText(yLabel, metrics.gridLeftPx - metrics.squareSizePx, y, coordinateFont));
         }
         if (coordinateSides.right) {
-          labels.push(svgText(yLabel, metrics.gridRightPx + spacingX * 0.45, y, coordinateFont));
+          labels.push(svgText(yLabel, metrics.gridRightPx + metrics.squareSizePx, y, coordinateFont));
         }
       }
     }
