@@ -5,16 +5,25 @@ import type { ProviderId } from "../../providers/types";
 
 interface Props {
   templateSvg?: string;
-  templatePng?: Blob;
   generatedImage?: Blob;
   providerId: ProviderId;
   model: string;
   prompt: string;
   options: GenerationOptions;
+  onDownloadTemplatePng: () => Promise<void>;
 }
 
-export function ArtifactPanel({ templateSvg, templatePng, generatedImage, providerId, model, prompt, options }: Props) {
+export function ArtifactPanel({
+  templateSvg,
+  generatedImage,
+  providerId,
+  model,
+  prompt,
+  options,
+  onDownloadTemplatePng
+}: Props) {
   const [copyStatus, setCopyStatus] = useState<string | undefined>(undefined);
+  const [isDownloadingTemplatePng, setIsDownloadingTemplatePng] = useState(false);
 
   const copyTemplateDataUrl = async () => {
     if (!templateSvg) return;
@@ -46,13 +55,15 @@ export function ArtifactPanel({ templateSvg, templatePng, generatedImage, provid
         </button>
         <button
           type="button"
-          disabled={!templatePng}
+          disabled={!templateSvg || isDownloadingTemplatePng}
           onClick={() => {
-            if (!templatePng) return;
-            downloadBlob(templatePng, "template.png");
+            setIsDownloadingTemplatePng(true);
+            void onDownloadTemplatePng().finally(() => {
+              setIsDownloadingTemplatePng(false);
+            });
           }}
         >
-          Download template.png
+          {isDownloadingTemplatePng ? "Preparing template.png..." : "Download template.png"}
         </button>
         <button
           type="button"

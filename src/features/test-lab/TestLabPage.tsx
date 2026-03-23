@@ -6,6 +6,7 @@ import {
   normalizeOptions,
   type GenerationOptions
 } from "../../domain/options";
+import { downloadBlob } from "../../lib/download";
 import { fileToBlob } from "../../lib/image";
 import { makeLog, type RunLog } from "../../lib/log";
 import { getProvider } from "../../providers/factory";
@@ -24,8 +25,45 @@ interface PreparedTemplate {
   svgDataUrl: string;
 }
 
+interface TemplatePreview {
+  svg: string;
+  svgDataUrl: string;
+  imageWidthPx: number;
+  imageHeightPx: number;
+}
+
+interface CachedTemplatePng {
+  svg: string;
+  png: Blob;
+}
+
 function svgToDataUrl(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function buildTemplatePreview(next: GenerationOptions): TemplatePreview {
+  const normalized = normalizeOptions(next);
+  const parseResult = generationOptionsSchema.safeParse(normalized);
+  if (!parseResult.success) {
+    throw new Error(parseResult.error.issues.map((issue) => issue.message).join(" "));
+  }
+  const svg = buildTemplateSvg(parseResult.data);
+  const metrics = buildLayoutMetrics(parseResult.data);
+  return {
+    svg,
+    svgDataUrl: svgToDataUrl(svg),
+    imageWidthPx: metrics.imageWidthPx,
+    imageHeightPx: metrics.imageHeightPx
+  };
+}
+
+async function rasterizeTemplate(preview: TemplatePreview): Promise<PreparedTemplate> {
+  const png = await rasterizeSvgToPng(preview.svg, preview.imageWidthPx, preview.imageHeightPx);
+  return {
+    svg: preview.svg,
+    png,
+    svgDataUrl: preview.svgDataUrl
+  };
 }
 
 export function TestLabPage() {
@@ -39,7 +77,7 @@ export function TestLabPage() {
     "Stylize this go board template as a calm natural wood board while preserving all geometry."
   );
   const [styleFile, setStyleFile] = useState<File | undefined>(undefined);
-  const [template, setTemplate] = useState<PreparedTemplate | undefined>(undefined);
+  const [cachedTemplatePng, setCachedTemplatePng] = useState<CachedTemplatePng | undefined>(undefined);
   const [generatedImage, setGeneratedImage] = useState<Blob | undefined>(undefined);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -50,35 +88,40 @@ export function TestLabPage() {
     () => providerDefinitions.find((entry) => entry.id === providerId)?.label ?? providerId,
     [providerId]
   );
+  const templatePreview = useMemo(() => buildTemplatePreview(options), [options]);
+  // Keep the SVG preview fully reactive, but only keep a PNG when an action actually
+  // needs it, such as downloading template.png or running the model. This preserves
+  // lazy rasterization even though the visible preview updates on every option change.
 
   const addLog = (level: RunLog["level"], message: string) => {
     setLogs((prev) => [makeLog(level, message), ...prev].slice(0, 20));
   };
 
-  const prepareTemplate = async (next: GenerationOptions): Promise<PreparedTemplate> => {
-    const normalized = normalizeOptions(next);
-    const parseResult = generationOptionsSchema.safeParse(normalized);
-    if (!parseResult.success) {
-      throw new Error(parseResult.error.issues.map((issue) => issue.message).join(" "));
-    }
-    const svg = buildTemplateSvg(parseResult.data);
-    const metrics = buildLayoutMetrics(parseResult.data);
-    const png = await rasterizeSvgToPng(svg, metrics.imageWidthPx, metrics.imageHeightPx);
-    return {
-      svg,
-      png,
-      svgDataUrl: svgToDataUrl(svg)
-    };
+  const prepareTemplate = async (preview: TemplatePreview): Promise<PreparedTemplate> => {
+    return rasterizeTemplate(preview);
   };
 
-  const handleGenerateTemplate = async () => {
+  const getPreparedTemplate = async (): Promise<PreparedTemplate> => {
+    if (cachedTemplatePng?.svg === templatePreview.svg) {
+      return {
+        svg: templatePreview.svg,
+        png: cachedTemplatePng.png,
+        svgDataUrl: templatePreview.svgDataUrl
+      };
+    }
+
+    const prepared = await prepareTemplate(templatePreview);
+    setCachedTemplatePng({ svg: prepared.svg, png: prepared.png });
+    return prepared;
+  };
+
+  const handleDownloadTemplatePng = async () => {
     setError(undefined);
     try {
-      const built = await prepareTemplate(options);
-      setTemplate(built);
-      addLog("info", "Template generated.");
+      const prepared = await getPreparedTemplate();
+      downloadBlob(prepared.png, "template.png");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error while generating template.";
+      const message = err instanceof Error ? err.message : "Unknown error while preparing template PNG.";
       setError(message);
       addLog("error", message);
     }
@@ -93,8 +136,7 @@ export function TestLabPage() {
     setError(undefined);
 
     try {
-      const prepared = await prepareTemplate(options);
-      setTemplate(prepared);
+      const prepared = await getPreparedTemplate();
       addLog("info", "Template generated for model run.");
 
       const styleBlob = styleFile ? await fileToBlob(styleFile) : undefined;
@@ -139,7 +181,6 @@ export function TestLabPage() {
             canRun={!isRunning}
             isRunning={isRunning}
             error={error}
-            onGenerateTemplate={handleGenerateTemplate}
             onRunModel={handleRunModel}
           />
           <OptionsPanel
@@ -165,15 +206,15 @@ export function TestLabPage() {
             model={model}
             prompt={prompt}
             options={options}
-            templateSvg={template?.svg}
-            templatePng={template?.png}
+            templateSvg={templatePreview.svg}
             generatedImage={generatedImage}
+            onDownloadTemplatePng={handleDownloadTemplatePng}
           />
         </div>
 
         <div className="stack">
           <ComparePanel
-            templateSvgDataUrl={template?.svgDataUrl}
+            templateSvgDataUrl={templatePreview.svgDataUrl}
             generatedImageUrl={generatedImageUrl}
             providerLabel={providerLabel}
             modelName={model}
