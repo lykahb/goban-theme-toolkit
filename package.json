@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "split:assets": "bash scripts/split-image-assets.sh",
+    "chromakey-to-alpha": "bash scripts/chromakey-to-alpha.sh"
   },
   "dependencies": {
     "react": "^18.3.1",

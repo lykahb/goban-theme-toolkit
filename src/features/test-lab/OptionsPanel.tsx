@@ -2,7 +2,8 @@ import type {
   CoordinateDisplay,
   CoordinateLettering,
   GenerationOptions,
-  ImageEdgeMarginMode
+  ImageEdgeMarginMode,
+  OutputFormat
 } from "../../domain/options";
 
 interface Props {
@@ -15,10 +16,25 @@ function asBool(value: string): boolean {
 }
 
 export function OptionsPanel({ value, onChange }: Props) {
-  const canDisableGrid = value.outputFormat === "online";
-  const coordinatesEnabled = value.coordinateDisplay !== "none";
+  const canDisableGrid = value.outputFormat === "ogs" || value.outputFormat === "gopanda2";
+  const isPandanetOutput = value.outputFormat === "gopanda2";
+  const canEditCoordinateDisplay = value.includeGrid;
+  const canEditCoordinateLettering = canEditCoordinateDisplay && value.coordinateDisplay !== "none";
 
   const setMarginMode = (mode: ImageEdgeMarginMode) => onChange({ ...value, imageEdgeMarginMode: mode });
+  const setOutputFormat = (outputFormat: OutputFormat) => {
+    const keepsCoordinateDisplay =
+      outputFormat !== "gopanda2" ||
+      value.coordinateDisplay === "none" ||
+      value.coordinateDisplay === "all";
+
+    onChange({
+      ...value,
+      outputFormat,
+      includeGrid: outputFormat === "print" ? true : value.includeGrid,
+      coordinateDisplay: keepsCoordinateDisplay ? value.coordinateDisplay : "none"
+    });
+  };
 
   return (
     <section className="card">
@@ -37,15 +53,10 @@ export function OptionsPanel({ value, onChange }: Props) {
         <label>Output format</label>
         <select
           value={value.outputFormat}
-          onChange={(e) =>
-            onChange({
-              ...value,
-              outputFormat: e.target.value as "online" | "print",
-              includeGrid: e.target.value === "print" ? true : value.includeGrid
-            })
-          }
+          onChange={(e) => setOutputFormat(e.target.value as OutputFormat)}
         >
-          <option value="online">Online</option>
+          <option value="ogs">OGS</option>
+          <option value="gopanda2">GoPanda2</option>
           <option value="print">Print</option>
         </select>
       </div>
@@ -67,15 +78,16 @@ export function OptionsPanel({ value, onChange }: Props) {
           <label>Coordinates display</label>
           <select
             value={value.coordinateDisplay}
-            disabled={!value.includeGrid}
+            disabled={!canEditCoordinateDisplay}
             onChange={(e) => onChange({ ...value, coordinateDisplay: e.target.value as CoordinateDisplay })}
           >
             <option value="none">None</option>
             <option value="all">All</option>
-            <option value="top_left">Top left</option>
-            <option value="top_right">Top right</option>
-            <option value="bottom_left">Bottom left</option>
-            <option value="bottom_right">Bottom right</option>
+            {/* Pandanet only supports None and All for coordinates display. */}
+            {!isPandanetOutput && <option value="top_left">Top left</option>}
+            {!isPandanetOutput && <option value="top_right">Top right</option>}
+            {!isPandanetOutput && <option value="bottom_left">Bottom left</option>}
+            {!isPandanetOutput && <option value="bottom_right">Bottom right</option>}
           </select>
         </div>
       </div>
@@ -85,7 +97,7 @@ export function OptionsPanel({ value, onChange }: Props) {
           <label>Coordinate lettering</label>
           <select
             value={value.coordinateLettering}
-            disabled={!value.includeGrid || !coordinatesEnabled}
+            disabled={!canEditCoordinateLettering}
             onChange={(e) => onChange({ ...value, coordinateLettering: e.target.value as CoordinateLettering })}
           >
             <option value="a1">A1</option>

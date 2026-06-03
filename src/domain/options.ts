@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 export const boardSizeSchema = z.union([z.literal(9), z.literal(13), z.literal(19)]);
-export const outputFormatSchema = z.union([z.literal("online"), z.literal("print")]);
+export const outputFormatSchema = z.union([
+  z.literal("ogs"),
+  z.literal("gopanda2"),
+  z.literal("print")
+]);
 export const imageEdgeMarginModeSchema = z.union([
   z.literal("transparent"),
   z.literal("extend_theme"),
@@ -52,7 +56,7 @@ export type CoordinateLettering = z.infer<typeof coordinateLetteringSchema>;
 
 export const defaultGenerationOptions: GenerationOptions = {
   boardSize: 19,
-  outputFormat: "online",
+  outputFormat: "ogs",
   includeGrid: true,
   coordinateDisplay: "none",
   coordinateLettering: "a1",
@@ -63,6 +67,13 @@ export const defaultGenerationOptions: GenerationOptions = {
 export function normalizeOptions(input: GenerationOptions): GenerationOptions {
   if (input.outputFormat === "print" && !input.includeGrid) {
     return { ...input, includeGrid: true };
+  }
+  if (
+    input.outputFormat === "gopanda2" &&
+    input.coordinateDisplay !== "none" &&
+    input.coordinateDisplay !== "all"
+  ) {
+    return { ...input, coordinateDisplay: "none" };
   }
   if (!input.includeGrid && input.coordinateDisplay !== "none") {
     return { ...input, coordinateDisplay: "none" };

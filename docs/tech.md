@@ -42,7 +42,7 @@ no | extend board theme | no grid&labels | There are no distinct geometric featu
 
 ## Output
 
-### Online
+### OGS
 Zip archive with images for OGS. Includes: board.png, black-stone.png, white-stone.png.
 The black and white stones are stored in separate images. The image must be square, 100x100px or higher, with transparency around the stone.
 

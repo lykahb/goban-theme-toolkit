@@ -11,6 +11,11 @@ import { fileToBlob } from "../../lib/image";
 import { makeLog, type RunLog } from "../../lib/log";
 import { getProvider } from "../../providers/factory";
 import { providerDefinitions, type ProviderId } from "../../providers/types";
+import {
+  buildStoneTemplateSvg,
+  stoneTemplateHeightPx,
+  stoneTemplateWidthPx
+} from "../../template/buildStoneTemplateSvg";
 import { buildTemplateSvg } from "../../template/buildTemplateSvg";
 import { rasterizeSvgToPng } from "../../template/rasterizeSvg";
 import { ArtifactPanel } from "./ArtifactPanel";
@@ -78,6 +83,7 @@ export function TestLabPage() {
   );
   const [styleFile, setStyleFile] = useState<File | undefined>(undefined);
   const [cachedTemplatePng, setCachedTemplatePng] = useState<CachedTemplatePng | undefined>(undefined);
+  const [cachedStoneTemplatePng, setCachedStoneTemplatePng] = useState<CachedTemplatePng | undefined>(undefined);
   const [generatedImage, setGeneratedImage] = useState<Blob | undefined>(undefined);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -89,6 +95,8 @@ export function TestLabPage() {
     [providerId]
   );
   const templatePreview = useMemo(() => buildTemplatePreview(options), [options]);
+  const stoneTemplateSvg = useMemo(() => buildStoneTemplateSvg(), []);
+  const stoneTemplateSvgDataUrl = useMemo(() => svgToDataUrl(stoneTemplateSvg), [stoneTemplateSvg]);
   // Keep the SVG preview fully reactive, but only keep a PNG when an action actually
   // needs it, such as downloading template.png or running the model. This preserves
   // lazy rasterization even though the visible preview updates on every option change.
@@ -119,9 +127,28 @@ export function TestLabPage() {
     setError(undefined);
     try {
       const prepared = await getPreparedTemplate();
-      downloadBlob(prepared.png, "template.png");
+      downloadBlob(prepared.png, "board-template.png");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error while preparing template PNG.";
+      setError(message);
+      addLog("error", message);
+    }
+  };
+
+  const handleDownloadStoneTemplatePng = async () => {
+    setError(undefined);
+    try {
+      if (cachedStoneTemplatePng?.svg === stoneTemplateSvg) {
+        downloadBlob(cachedStoneTemplatePng.png, "stone-template.png");
+        return;
+      }
+
+      const png = await rasterizeSvgToPng(stoneTemplateSvg, stoneTemplateWidthPx, stoneTemplateHeightPx);
+      setCachedStoneTemplatePng({ svg: stoneTemplateSvg, png });
+      downloadBlob(png, "stone-template.png");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unknown error while preparing stone template PNG.";
       setError(message);
       addLog("error", message);
     }
@@ -207,14 +234,17 @@ export function TestLabPage() {
             prompt={prompt}
             options={options}
             templateSvg={templatePreview.svg}
+            stoneTemplateSvg={stoneTemplateSvg}
             generatedImage={generatedImage}
             onDownloadTemplatePng={handleDownloadTemplatePng}
+            onDownloadStoneTemplatePng={handleDownloadStoneTemplatePng}
           />
         </div>
 
         <div className="stack">
           <ComparePanel
             templateSvgDataUrl={templatePreview.svgDataUrl}
+            stoneTemplateSvgDataUrl={stoneTemplateSvgDataUrl}
             generatedImageUrl={generatedImageUrl}
             providerLabel={providerLabel}
             modelName={model}

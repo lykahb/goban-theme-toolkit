@@ -68,7 +68,7 @@ Technical design for the first implementation milestone: generate deterministic 
 
 `GenerationOptions`
 - `boardSize`: `9 | 13 | 19`
-- `outputFormat`: `"online" | "print"`
+- `outputFormat`: `"ogs" | "gopanda2" | "print"`
 - `includeGrid`: boolean (for print this is forced to `true`)
 - `coordinateDisplay`: `"none" | "all" | "top_left" | "top_right" | "bottom_left" | "bottom_right"` (requires `includeGrid`; controls label placement only)
 - `coordinateLettering`: `"a1" | "numeric_japanese"` (used when `coordinateDisplay != "none"`; defines origin: `a1` bottom-left, `numeric_japanese` upper-left)

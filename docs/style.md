@@ -22,3 +22,25 @@ The boundary between the board image margin and the board edge. It depends on th
 
 ### Colors
 The palette and contrast should be treated based on the human visual perception rather than mathematical relationships between the colors. The OKLCH is a good fit. The exploration of the online tools to generate distinct colors, shows that they aren't a good fit: they work for more than 3 colors, without distinghishing the role of the color. Instead, we can work with the OKLCH algorithms directly, so that we can set the target ranges of lightness for board and stones. Likely, the board would set the baseline for the lightness, and the black and white stones would have +-delta lightness compared to it.
+
+
+### Theme ideas
+Boards
+
+Common uniform material that doesn't tightly constrain the themes for stones:
+- ground (lawn, field, sand, etc), water, sky, paper, wood (traditional), cloth, 
+
+Uniform material that constrains theme a lot
+- cake surface to decorate with round sweets
+
+Non-physical:
+- TV static, 
+
+Abstract
+- Gradients, swirls, subtle pattern like on the carpets or bus seats
+
+Themed, includes spaces to place the stones
+The ideas below come from https://www.nihonkiin.or.jp/teach/app/yonro/yonro02.html.
+- Table with plates for colored donuts, water with ice islands for bears and seals, lotus leaves on water for frogs and snails.
+
+
