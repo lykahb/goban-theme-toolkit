@@ -63,6 +63,8 @@ export function buildTemplateSvg(options: GenerationOptions): string {
   const spacingX = (metrics.gridRightPx - metrics.gridLeftPx) / (metrics.lineCount - 1);
   const spacingY = (metrics.gridBottomPx - metrics.gridTopPx) / (metrics.lineCount - 1);
   const coordinateFont = Math.max(14, Math.min(spacingX, spacingY) * 0.4);
+  const coordinateOffsetPx =
+    options.outputFormat === "gopanda2" ? metrics.squareSizePx * 0.65 : metrics.squareSizePx;
   const coordinateSides = getCoordinateSides(options.coordinateDisplay);
   const lines: string[] = [];
   const labels: string[] = [];
@@ -85,16 +87,16 @@ export function buildTemplateSvg(options: GenerationOptions): string {
           options.coordinateLettering === "a1" ? String(yValue) : escapeXml(toJapaneseNumeral(yValue));
 
         if (coordinateSides.top) {
-          labels.push(svgText(xLabel, x, metrics.gridTopPx - metrics.squareSizePx, coordinateFont));
+          labels.push(svgText(xLabel, x, metrics.gridTopPx - coordinateOffsetPx, coordinateFont));
         }
         if (coordinateSides.bottom) {
-          labels.push(svgText(xLabel, x, metrics.gridBottomPx + metrics.squareSizePx, coordinateFont));
+          labels.push(svgText(xLabel, x, metrics.gridBottomPx + coordinateOffsetPx, coordinateFont));
         }
         if (coordinateSides.left) {
-          labels.push(svgText(yLabel, metrics.gridLeftPx - metrics.squareSizePx, y, coordinateFont));
+          labels.push(svgText(yLabel, metrics.gridLeftPx - coordinateOffsetPx, y, coordinateFont));
         }
         if (coordinateSides.right) {
-          labels.push(svgText(yLabel, metrics.gridRightPx + metrics.squareSizePx, y, coordinateFont));
+          labels.push(svgText(yLabel, metrics.gridRightPx + coordinateOffsetPx, y, coordinateFont));
         }
       }
     }

@@ -1,6 +1,6 @@
-# OGS grid formulas (reference)
+# Grid formulas (reference)
 
-How OGS computes grid placement and size for SVG rendering, based on source code in commit `4772659d69e4eb5ea67646c030a43dbaa5a4ed09`.
+Target-client board geometry for OGS and GoPanda2/Pandanet. The OGS formulas come from OGS source code in commit `4772659d69e4eb5ea67646c030a43dbaa5a4ed09`; the Pandanet formulas come from measured board proportions.
 
 ## Scope
 - This document focuses on formulas for:
@@ -8,16 +8,18 @@ How OGS computes grid placement and size for SVG rendering, based on source code
   - grid origin offsets,
   - how label display changes layout,
   - coordinate label placement and numbering origin.
+- Sections marked OGS describe Online-Go renderer behavior.
+- Sections marked GoPanda2/Pandanet describe Pandanet board proportions.
 - No local code changes are included here.
 
-## Symbols used below
+## OGS symbols
 - `ss`: square size in pixels (`this.square_size`)
 - `W`, `H`: full board dimensions (`this.width`, `this.height`)
 - `BW`, `BH`: bounded board dimensions (`this.bounded_width`, `this.bounded_height`)
 - `L`, `R`, `T`, `B`: label draw flags (`draw_left_labels`, `draw_right_labels`, `draw_top_labels`, `draw_bottom_labels`) treated as `0/1`
 - `bounds = {left, right, top, bottom}`: visible sub-board bounds
 
-## 1) Label flags and bounded board dimensions
+## OGS 1) Label flags and bounded board dimensions
 
 Formulas:
 - `BW = bounds.right - bounds.left + 1`
@@ -34,7 +36,7 @@ References:
 - [InteractiveBase.ts#L410](https://github.com/online-go/goban/blob/4772659d69e4eb5ea67646c030a43dbaa5a4ed09/src/Goban/InteractiveBase.ts#L410)  
   Disables labels when a corresponding side is not on the outer board edge.
 
-## 2) Square size from display width (auto sizing)
+## OGS 2) Square size from display width (auto sizing)
 
 Formulas:
 - `nSquares = max(BW + L + R, BH + T + B)`
@@ -48,7 +50,7 @@ References:
 - [Goban.ts#L361](https://github.com/online-go/goban/blob/4772659d69e4eb5ea67646c030a43dbaa5a4ed09/src/Goban/Goban.ts#L361)  
   Returns floored square size.
 
-## 3) Board pixel size (canvas/SVG extents)
+## OGS 3) Board pixel size (canvas/SVG extents)
 
 Formulas:
 - `metrics.width  = ss * (BW + L + R)`
@@ -59,7 +61,7 @@ Reference:
 - [Goban.ts#L439](https://github.com/online-go/goban/blob/4772659d69e4eb5ea67646c030a43dbaa5a4ed09/src/Goban/Goban.ts#L439)  
   `computeMetrics()` builds board pixel dimensions from bounded size + label squares.
 
-## 4) Grid origin and line formulas (`drawLines`)
+## OGS 4) Grid origin and line formulas (`drawLines`)
 
 Raw setup:
 - `ox = L ? ss : 0`
@@ -87,7 +89,7 @@ Reference:
 - [SVGRenderer.ts#L3629](https://github.com/online-go/goban/blob/4772659d69e4eb5ea67646c030a43dbaa5a4ed09/src/Goban/SVGRenderer.ts#L3629)  
   Builds full grid path from `ox/oy` and `ss`.
 
-## 5) Star points (`hoshi`) in grid coordinates
+## OGS 5) Star points (`hoshi`) in grid coordinates
 
 Formula:
 - Star point center uses same grid transform:  
@@ -100,7 +102,7 @@ Reference:
 - [SVGRenderer.ts#L3692](https://github.com/online-go/goban/blob/4772659d69e4eb5ea67646c030a43dbaa5a4ed09/src/Goban/SVGRenderer.ts#L3692)  
   Converts hoshi indices to pixel positions.
 
-## 6) Coordinate labels: placement vs numbering origin
+## OGS 6) Coordinate labels: placement vs numbering origin
 
 Side placement conditions:
 - Top labels only when `draw_top_labels` and `bounds.top === 0`
@@ -138,7 +140,7 @@ References:
 - [SVGRenderer.ts#L3813](https://github.com/online-go/goban/blob/4772659d69e4eb5ea67646c030a43dbaa5a4ed09/src/Goban/SVGRenderer.ts#L3813)  
   `1-1` vertical uses ascending Japanese numerals by `c`.
 
-## 7) Practical mapping for our template generator
+## OGS 7) Practical mapping for our template generator
 
 To match OGS stone placement, derive template geometry from these quantities:
 - `ss`: chosen square size
@@ -153,17 +155,50 @@ Then:
 
 This is the minimum needed to make template intersections align with OGS stone placement.
 
-## 8) LayoutMetrics initialization from generator options
+## Generator LayoutMetrics initialization from options
 
-This section describes how to initialize `LayoutMetrics` directly from Goban Generator options, without using OGS internal naming.
+This section describes how to initialize `LayoutMetrics` directly from Goban Generator options, without using target-client internal naming.
 
-### Inputs from options
+### Common inputs from options
 - `boardSize`: controls grid line count (`lineCount`).
 - `coordinateDisplay`: controls which label margins are present on each side.
 - `coordinateLettering`: affects label values/origin semantics only, not geometry.
-- `outputFormat`, `includeGrid`, `drawBoardEdges`, `imageEdgeMarginMode`: do not change intersection coordinates directly.
+- `outputFormat`: selects the target-client board proportions.
+- `includeGrid`, `drawBoardEdges`, `imageEdgeMarginMode`: do not change intersection coordinates directly.
 
-### Side label margins derived from `coordinateDisplay`
+### GoPanda2/Pandanet LayoutMetrics path
+
+Pandanet uses a square board area. The board background, grid canvas, and visible grid are all square, but they describe different parts of the board:
+- Board area: the full square visual board, including the outer margin.
+- Grid: the square line lattice from the first line to the last line.
+- Cell size: the spacing between adjacent board points.
+- Margin: the empty board area between the board edge and the first/last grid line.
+
+For 19x19 without coordinate labels:
+- Board width = `19.4` cell sizes.
+- Grid line span = `18` cell sizes.
+- Edge-to-first-line margin = `0.7` cell sizes.
+- Margin as board width = `3.61%`.
+- Margin as grid span = `3.89%`.
+
+For 19x19 with coordinate labels:
+- Board width = `20.4` cell sizes.
+- Grid line span = `18` cell sizes.
+- Edge-to-first-line margin = `1.2` cell sizes.
+- Margin as board width = `5.88%`.
+- Margin as grid span = `6.67%`.
+
+For other board sizes, apply the same margin-cell rule around a `(boardSize - 1)` grid span:
+- `marginCells = 0.7` when `coordinateDisplay` is `none`.
+- `marginCells = 1.2` when coordinates are enabled.
+- `boardWidthCells = (boardSize - 1) + 2 * marginCells`.
+- `gridSpanCells = boardSize - 1`.
+
+### OGS/print LayoutMetrics path
+
+OGS and print currently share the same template geometry. The formulas below derive the OGS-style board and grid metrics from generator options.
+
+#### Side label margins derived from `coordinateDisplay`
 
 Initialize four booleans:
 - `hasTopLabels`
@@ -179,7 +214,7 @@ Mapping:
 - `bottom_left` -> bottom/left true
 - `bottom_right` -> bottom/right true
 
-### Base values
+#### Base values
 
 Initialize:
 - `lineCount = boardSize`
@@ -187,7 +222,7 @@ Initialize:
 - `boundedGridHeight = boardSize`
 - `imageWidthPx` and `imageHeightPx` from the chosen render target size
 
-### Square size for alignment
+#### Square size for alignment
 
 Use one cell size in pixels:
 - `squareSizePx = floor(targetDisplayWidthPx / max(
@@ -199,7 +234,7 @@ Then initialize:
 - `imageWidthPx = squareSizePx * (boundedGridWidth + hasLeftLabels + hasRightLabels)`
 - `imageHeightPx = squareSizePx * (boundedGridHeight + hasTopLabels + hasBottomLabels)`
 
-### Grid origin (first intersection center)
+#### Grid origin (first intersection center)
 
 Initialize:
 - `gridOriginXPx = (hasLeftLabels ? squareSizePx : 0) + round(squareSizePx / 2)`
@@ -207,7 +242,7 @@ Initialize:
 
 For full-board view this is sufficient.
 
-### Grid bounds
+#### Grid bounds
 
 Initialize:
 - `gridLeftPx = gridOriginXPx`
@@ -215,7 +250,7 @@ Initialize:
 - `gridRightPx = gridOriginXPx + (lineCount - 1) * squareSizePx`
 - `gridBottomPx = gridOriginYPx + (lineCount - 1) * squareSizePx`
 
-### Board bounds
+#### Board bounds
 
 Initialize board rectangle from grid bounds plus board-edge margins:
 - `boardEdgeMarginTopPx`
@@ -229,7 +264,7 @@ Initialize board rectangle from grid bounds plus board-edge margins:
 - `boardWidthPx = boardRightPx - boardLeftPx`
 - `boardHeightPx = boardBottomPx - boardTopPx`
 
-### Coordinate labels
+### Coordinate labels shared by targets
 
 Geometry:
 - Label placement comes from `coordinateDisplay` side booleans only.

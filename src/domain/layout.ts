@@ -53,6 +53,50 @@ export function getCoordinateSides(display: CoordinateDisplay): CoordinateSides 
 
 export function buildLayoutMetrics(options: GenerationOptions): LayoutMetrics {
   const lineCount = options.boardSize;
+
+  if (options.outputFormat === "gopanda2") {
+    const marginCells = options.coordinateDisplay === "none" ? 0.7 : 1.2;
+    const boardWidthCells = lineCount - 1 + marginCells * 2;
+    const squareSizePx = TEMPLATE_IMAGE_SIZE / boardWidthCells;
+    const imageWidthPx = TEMPLATE_IMAGE_SIZE;
+    const imageHeightPx = TEMPLATE_IMAGE_SIZE;
+    const boardWidthPx = imageWidthPx;
+    const boardHeightPx = imageHeightPx;
+    const boardLeftPx = 0;
+    const boardTopPx = 0;
+    const boardRightPx = boardWidthPx;
+    const boardBottomPx = boardHeightPx;
+    const boardEdgeMarginTopPx = marginCells * squareSizePx;
+    const boardEdgeMarginBottomPx = boardEdgeMarginTopPx;
+    const boardEdgeMarginLeftPx = boardEdgeMarginTopPx;
+    const boardEdgeMarginRightPx = boardEdgeMarginTopPx;
+    const gridLeftPx = boardEdgeMarginLeftPx;
+    const gridTopPx = boardEdgeMarginTopPx;
+    const gridRightPx = boardRightPx - boardEdgeMarginRightPx;
+    const gridBottomPx = boardBottomPx - boardEdgeMarginBottomPx;
+
+    return {
+      squareSizePx,
+      imageWidthPx,
+      imageHeightPx,
+      boardWidthPx,
+      boardHeightPx,
+      boardLeftPx,
+      boardTopPx,
+      boardRightPx,
+      boardBottomPx,
+      gridLeftPx,
+      gridTopPx,
+      gridRightPx,
+      gridBottomPx,
+      boardEdgeMarginTopPx,
+      boardEdgeMarginBottomPx,
+      boardEdgeMarginLeftPx,
+      boardEdgeMarginRightPx,
+      lineCount
+    };
+  }
+
   const sides = getCoordinateSides(options.coordinateDisplay);
 
   const boundedGridWidth = lineCount;

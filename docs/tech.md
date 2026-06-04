@@ -18,7 +18,7 @@ How do we manage the API keys? This needs research. The simplest idea is to ask 
 ## Controlling the layout and colors
 The grid and board labels (coordinates) must be positioned precisely to match where OGS places the stones. For print the grid also must be present. Passing the exact geometry in the prompt as text is unfeasible. Instead, the solution is to create a template image that holds the geometry. 
 
-Derived OGS grid formulas are documented in [OGS grid formulas](ogs-grid-formulas.md).
+Derived grid formulas are documented in [Grid formulas](grid-formulas.md).
 
 The exact content of that image depends on what works best for a particular model.  Thickness of the lines, presence of any auxiliary elements may vary.
 

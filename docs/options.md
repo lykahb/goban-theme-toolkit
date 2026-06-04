@@ -24,5 +24,5 @@ yes (fence) | prompt or image (sidewalk) | lawn extends up to the board edges wh
 5. Coordinates display. Values: none, all, top left, top right, bottom left, bottom right. This option is only available if grid is included. This option only controls where labels are displayed. For GoPanda2 output, only none and all are available.
 6. Coordinate lettering. Values: A1 (letters horizontally, numbers vertically), 1-1 (regular numbers horizontally, japanese numerals vertically). Enabled only when Coordinates display is not none.
    The lettering convention defines the origin: for A1 the origin is bottom-left, for 1-1 the origin is upper-left.
-7. Output format. There are three options: OGS, GoPanda2, and print.
+7. Output format. There are three options: OGS, GoPanda2, and print. OGS and GoPanda2 use client-specific board proportions for stone placement.
 8. Size of stones in mm. This option is only available if output is for print. Include default options.
